@@ -24,28 +24,28 @@ function CarbonStack() {
       <div className="relative h-[460px] w-[360px]">
         <Sheet className="rotate-[7deg] translate-x-10 translate-y-6 bg-[#f7c6d2]" lines={4} faded />
         <Sheet className="rotate-[3deg] translate-x-5 translate-y-3 bg-[#f6e6a2]" lines={5} faded />
-        <div className="absolute inset-0 -rotate-[2deg] rounded-[10px] bg-white p-7 text-[#1d2430] shadow-[0_30px_60px_-20px_rgb(8_20_80/0.55)]">
+        <div className="absolute inset-0 -rotate-[2deg] rounded-[10px] bg-white p-7 text-[#22262e] shadow-[0_30px_60px_-20px_rgb(40_8_14/0.55)]">
           <div className="flex items-center justify-between">
-            <span className="text-[13px] font-semibold text-[#8a929e]">HD-2187</span>
-            <span className="rounded-full bg-[#e7ecfd] px-2.5 py-0.5 text-[12px] font-medium text-[#2346d8]">In progress</span>
+            <span className="text-[13px] font-semibold text-[#8b8f98]">HD-2187</span>
+            <span className="rounded-full bg-[#f5e3e5] px-2.5 py-0.5 text-[12px] font-medium text-[#8a2433]">In progress</span>
           </div>
           <p className="mt-3 text-[20px] leading-snug font-semibold tracking-[-0.015em]">Checkout button does nothing on Safari</p>
-          <div className="my-5 h-[10px] bg-[radial-gradient(circle,#2346d8_3.5px,transparent_4px)] bg-[length:14px_10px] bg-repeat-x" />
+          <div className="my-5 h-[10px] bg-[radial-gradient(circle,#8a2433_3.5px,transparent_4px)] bg-[length:14px_10px] bg-repeat-x" />
           <div className="space-y-3 text-[14px] leading-relaxed">
             <div className="flex gap-2.5">
               <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[#f6e6cf] text-[11px] font-semibold text-[#7a4c10]">
                 LF
               </span>
-              <p className="rounded-2xl rounded-tl-md border border-[#dcdfe1] px-3 py-2">
+              <p className="rounded-2xl rounded-tl-md border border-[#dcdcd8] px-3 py-2">
                 Here's what I see after tapping it. Screenshot attached.
               </p>
             </div>
-            <div className="ml-10 h-24 rounded-lg border border-[#dcdfe1] bg-[linear-gradient(135deg,#eceee9,#f5f6f3)]" />
+            <div className="ml-10 h-24 rounded-lg border border-[#dcdcd8] bg-[linear-gradient(135deg,#e9e9e6,#f2f2f0)]" />
             <div className="flex flex-row-reverse gap-2.5">
               <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[#dfe6fb] text-[11px] font-semibold text-[#2a3f8f]">
                 JR
               </span>
-              <p className="rounded-2xl rounded-tr-md bg-[#2346d8] px-3 py-2 text-white">Reproduced. A fix is rolling out now.</p>
+              <p className="rounded-2xl rounded-tr-md bg-[#8a2433] px-3 py-2 text-white">Reproduced. A fix is rolling out now.</p>
             </div>
           </div>
         </div>
@@ -59,7 +59,7 @@ function CarbonStack() {
 
 function Sheet({ className, lines, faded }: { className: string; lines: number; faded?: boolean }) {
   return (
-    <div className={`absolute inset-0 rounded-[10px] p-7 shadow-[0_20px_40px_-24px_rgb(8_20_80/0.5)] ${className}`}>
+    <div className={`absolute inset-0 rounded-[10px] p-7 shadow-[0_20px_40px_-24px_rgb(40_8_14/0.5)] ${className}`}>
       <div className={faded ? 'opacity-30' : ''}>
         <div className="h-3 w-16 rounded bg-black/30" />
         <div className="mt-4 h-4 w-56 rounded bg-black/30" />

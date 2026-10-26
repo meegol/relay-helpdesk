@@ -4,11 +4,11 @@ import { clientStatusLabel, priorityLabel, statusLabel } from '../lib/format'
 import type { Priority, TicketStatus } from '../lib/types'
 
 export const statusTone: Record<TicketStatus, { dot: string; pill: string; rail: string }> = {
-  OPEN: { dot: 'bg-accent', pill: 'bg-accent-soft text-accent', rail: 'bg-accent' },
-  IN_PROGRESS: { dot: 'bg-amber', pill: 'bg-amber-soft text-amber', rail: 'bg-amber' },
+  OPEN: { dot: 'bg-ink', pill: 'bg-surface text-ink ring-1 ring-inset ring-rule-strong', rail: 'bg-ink' },
+  IN_PROGRESS: { dot: 'bg-accent', pill: 'bg-accent-soft text-accent', rail: 'bg-accent' },
   WAITING_ON_CLIENT: { dot: 'bg-canary-edge', pill: 'bg-canary text-canary-ink', rail: 'bg-canary-edge' },
   RESOLVED: { dot: 'bg-green', pill: 'bg-green-soft text-green', rail: 'bg-green' },
-  CLOSED: { dot: 'bg-ink-3', pill: 'bg-sunken text-ink-2', rail: 'bg-rule-strong' },
+  CLOSED: { dot: 'bg-ink-3', pill: 'bg-sunken text-ink-3', rail: 'bg-rule-strong' },
 }
 
 export function StatusPill({ status, client, className }: { status: TicketStatus; client?: boolean; className?: string }) {
