@@ -1,10 +1,12 @@
-import { Inbox } from 'lucide-react'
+import { Download, Inbox } from 'lucide-react'
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { SearchInput } from '../../components/SearchInput'
 import { TicketList } from '../../components/TicketList'
-import { EmptyState, PageHeader, Segmented, Select } from '../../components/ui'
+import { Button, EmptyState, PageHeader, Segmented, Select } from '../../components/ui'
+import { downloadFile } from '../../lib/api'
 import { PRIORITIES, STATUSES, priorityLabel, statusLabel } from '../../lib/format'
+import { toast } from 'sonner'
 import { useDebounced, useTickets } from '../../lib/useTickets'
 
 type Scope = 'all' | 'queue' | 'mine'
@@ -33,10 +35,53 @@ export default function AdminTickets() {
     },
     true,
   )
+  const [exporting, setExporting] = useState(false)
+
+  const handleExport = async (format: 'csv' | 'json') => {
+    setExporting(true)
+    try {
+      const qParams = new URLSearchParams()
+      if (scope !== 'all') qParams.set('scope', scope)
+      if (status !== 'any') qParams.set('status', status)
+      if (priority) qParams.set('priority', priority)
+      if (query) qParams.set('q', query)
+      qParams.set('format', format)
+      await downloadFile(`/tickets/export?${qParams.toString()}`, `tickets.${format}`)
+      toast.success(`Exported tickets as ${format.toUpperCase()}`)
+    } catch (e) {
+      toast.error((e as Error).message)
+    } finally {
+      setExporting(false)
+    }
+  }
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-6 sm:px-8 sm:py-10">
-      <PageHeader title="Tickets" description="Every request across all clients. Open one to reassign it or step into the conversation." />
+      <PageHeader
+        title="Tickets"
+        description="Every request across all clients. Open one to reassign it or step into the conversation."
+        actions={
+          <div className="flex items-center gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<Download className="size-4" />}
+              loading={exporting}
+              onClick={() => void handleExport('csv')}
+            >
+              Export CSV
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              loading={exporting}
+              onClick={() => void handleExport('json')}
+            >
+              JSON
+            </Button>
+          </div>
+        }
+      />
 
       <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <Segmented

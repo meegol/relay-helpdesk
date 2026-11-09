@@ -1,11 +1,13 @@
-import { CircleCheck, Inbox, Layers } from 'lucide-react'
+import { CircleCheck, Download, Inbox, Layers } from 'lucide-react'
 import { useState } from 'react'
 import { SearchInput } from '../../components/SearchInput'
 import { TicketList } from '../../components/TicketList'
-import { EmptyState, PageHeader, Segmented, Select } from '../../components/ui'
+import { Button, EmptyState, PageHeader, Segmented, Select } from '../../components/ui'
+import { downloadFile } from '../../lib/api'
 import { useUser } from '../../lib/auth'
 import { PRIORITIES, priorityLabel } from '../../lib/format'
 import { useTicketListRefresh } from '../../lib/realtime'
+import { toast } from 'sonner'
 import { useDebounced, useSummary, useTickets } from '../../lib/useTickets'
 
 type Tab = 'mine' | 'queue' | 'done'
@@ -27,6 +29,25 @@ export default function StaffInbox() {
   )
   const { summary, reload } = useSummary<{ assigned: number; queue: number; resolvedThisWeek: number }>()
   useTicketListRefresh(reload, true)
+  const [exporting, setExporting] = useState(false)
+
+  const handleExport = async (format: 'csv' | 'json') => {
+    setExporting(true)
+    try {
+      const qParams = new URLSearchParams()
+      qParams.set('scope', tab === 'queue' ? 'queue' : 'mine')
+      qParams.set('status', tab === 'done' ? 'done' : 'active')
+      if (priority) qParams.set('priority', priority)
+      if (query) qParams.set('q', query)
+      qParams.set('format', format)
+      await downloadFile(`/tickets/export?${qParams.toString()}`, `inbox-tickets.${format}`)
+      toast.success(`Exported tickets as ${format.toUpperCase()}`)
+    } catch (e) {
+      toast.error((e as Error).message)
+    } finally {
+      setExporting(false)
+    }
+  }
 
   const description =
     summary == null
@@ -37,7 +58,31 @@ export default function StaffInbox() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-6 sm:px-8 sm:py-10">
-      <PageHeader title={`Inbox`} description={description} />
+      <PageHeader
+        title={`Inbox`}
+        description={description}
+        actions={
+          <div className="flex items-center gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<Download className="size-4" />}
+              loading={exporting}
+              onClick={() => void handleExport('csv')}
+            >
+              Export CSV
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              loading={exporting}
+              onClick={() => void handleExport('json')}
+            >
+              JSON
+            </Button>
+          </div>
+        }
+      />
 
       <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <Segmented

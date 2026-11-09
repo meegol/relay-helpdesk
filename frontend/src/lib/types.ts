@@ -21,6 +21,15 @@ export interface UserSummary {
   title: string | null
 }
 
+export interface CannedResponse {
+  id: number
+  title: string
+  shortcut?: string
+  content: string
+  createdBy?: UserSummary
+  createdAt: string
+}
+
 export interface Attachment {
   id: number
   name: string

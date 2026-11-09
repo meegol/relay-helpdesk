@@ -109,6 +109,26 @@ export function attachmentObjectUrl(url: string): Promise<string> {
   return cached
 }
 
+export async function downloadFile(path: string, filename: string) {
+  const token = currentToken()
+  const headers: Record<string, string> = {}
+  if (token) headers.Authorization = `Bearer ${token}`
+
+  const res = await fetch(`${API_BASE}/api${path}`, { headers })
+  if (!res.ok) {
+    throw new ApiError(res.status, 'Download failed')
+  }
+  const blob = await res.blob()
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
+
 export function uploadFile(file: File, onProgress?: (fraction: number) => void) {
   return new Promise<import('./types').Attachment>((resolve, reject) => {
     const xhr = new XMLHttpRequest()

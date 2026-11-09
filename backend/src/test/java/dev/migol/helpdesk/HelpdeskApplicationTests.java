@@ -123,4 +123,42 @@ class HelpdeskApplicationTests {
         mvc.perform(multipart("/api/attachments").file(svg).header("Authorization", client))
                 .andExpect(status().isUnsupportedMediaType());
     }
+
+    @Test
+    void cannedResponsesAndTicketExport() throws Exception {
+        String staff = login("jordan@relay.dev", "staff1234");
+        String client = login("lena@northwind.io", "client1234");
+
+        // Client cannot access canned responses
+        mvc.perform(get("/api/canned-responses").header("Authorization", client))
+                .andExpect(status().isForbidden());
+
+        // Staff can list and create canned responses
+        mvc.perform(get("/api/canned-responses").header("Authorization", staff))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray());
+
+        String created = mvc.perform(post("/api/canned-responses").header("Authorization", staff)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"title\":\"Follow up\",\"shortcut\":\"followup\",\"content\":\"Following up on this ticket!\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.title").value("Follow up"))
+                .andReturn().getResponse().getContentAsString();
+        int cannedId = JsonPath.read(created, "$.id");
+
+        // Export endpoints: client forbidden, staff allowed
+        mvc.perform(get("/api/tickets/export?format=csv").header("Authorization", client))
+                .andExpect(status().isForbidden());
+
+        mvc.perform(get("/api/tickets/export?format=csv").header("Authorization", staff))
+                .andExpect(status().isOk());
+
+        mvc.perform(get("/api/tickets/export?format=json").header("Authorization", staff))
+                .andExpect(status().isOk());
+
+        // Staff can delete created canned response
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete("/api/canned-responses/" + cannedId)
+                .header("Authorization", staff))
+                .andExpect(status().isNoContent());
+    }
 }

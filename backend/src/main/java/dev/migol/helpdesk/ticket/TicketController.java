@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -51,6 +54,22 @@ public class TicketController {
             @RequestParam(required = false) TicketPriority priority,
             @RequestParam(required = false) String q) {
         return service.list(principal, new TicketService.ListQuery(scope, status, priority, q));
+    }
+
+    @GetMapping("/export")
+    public ResponseEntity<byte[]> export(@AuthenticationPrincipal UserPrincipal principal,
+            @RequestParam(required = false) String scope,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) TicketPriority priority,
+            @RequestParam(required = false) String q,
+            @RequestParam(defaultValue = "csv") String format) {
+        byte[] content = service.exportTickets(principal, new TicketService.ListQuery(scope, status, priority, q), format);
+        boolean isCsv = "csv".equalsIgnoreCase(format);
+        String filename = "tickets-export." + (isCsv ? "csv" : "json");
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .contentType(isCsv ? MediaType.parseMediaType("text/csv; charset=UTF-8") : MediaType.APPLICATION_JSON)
+                .body(content);
     }
 
     @GetMapping("/summary")
