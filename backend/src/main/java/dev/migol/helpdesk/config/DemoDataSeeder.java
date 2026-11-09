@@ -33,15 +33,18 @@ public class DemoDataSeeder implements ApplicationRunner {
     private final UserRepository users;
     private final TicketRepository tickets;
     private final MessageRepository messages;
+    private final dev.migol.helpdesk.canned.CannedResponseRepository cannedResponses;
     private final PasswordEncoder passwordEncoder;
     private final Instant now = Instant.now();
 
     public DemoDataSeeder(AppProperties props, UserRepository users, TicketRepository tickets, MessageRepository messages,
+            dev.migol.helpdesk.canned.CannedResponseRepository cannedResponses,
             PasswordEncoder passwordEncoder) {
         this.props = props;
         this.users = users;
         this.tickets = tickets;
         this.messages = messages;
+        this.cannedResponses = cannedResponses;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -59,6 +62,22 @@ public class DemoDataSeeder implements ApplicationRunner {
         User jordan = user("jordan@relay.dev", "Jordan Reyes", Role.STAFF, "Support Engineer", "staff1234");
         User sam = user("sam@relay.dev", "Sam Okafor", Role.STAFF, "Billing Specialist", "staff1234");
         user("priya@relay.dev", "Priya Nair", Role.STAFF, "Support Engineer", "staff1234");
+
+        cannedResponses.save(new dev.migol.helpdesk.canned.CannedResponse(
+                "Need more information",
+                "info",
+                "Hi there,\n\nCould you please share a bit more context or provide reproduction steps (including error screenshots or network HAR logs)? This will help us investigate further.\n\nThanks!",
+                jordan));
+        cannedResponses.save(new dev.migol.helpdesk.canned.CannedResponse(
+                "Issue Resolved",
+                "resolve",
+                "Hi,\n\nWe have applied a fix for this issue. Could you please test again on your end and let us know if everything is working smoothly now?\n\nBest regards,\nRelay Support",
+                jordan));
+        cannedResponses.save(new dev.migol.helpdesk.canned.CannedResponse(
+                "Billing duplicate refund initiated",
+                "refund",
+                "Hello,\n\nI have reviewed the charges and initiated a refund for the duplicate transaction. It typically takes 3 to 5 business days to appear on your bank statement.",
+                sam));
         User lena = user("lena@northwind.io", "Lena Fischer", Role.CLIENT, "Northwind", "client1234");
         User marco = user("marco@acme.co", "Marco Bianchi", Role.CLIENT, "Acme Co", "client1234");
         User hana = user("hana@kitelabs.com", "Hana Sato", Role.CLIENT, "Kite Labs", "client1234");

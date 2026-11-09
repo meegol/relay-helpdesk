@@ -1,9 +1,9 @@
 import clsx from 'clsx'
-import { ImagePlus, LoaderCircle, Lock, MessageSquare, SendHorizontal, TriangleAlert, X } from 'lucide-react'
+import { Bookmark, ImagePlus, LoaderCircle, Lock, MessageSquare, SendHorizontal, TriangleAlert, X } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState, type ClipboardEvent, type DragEvent, type KeyboardEvent } from 'react'
 import { toast } from 'sonner'
 import { api, uploadFile } from '../lib/api'
-import type { Attachment, Message } from '../lib/types'
+import type { Attachment, CannedResponse, Message } from '../lib/types'
 
 export interface PendingFile {
   key: string
@@ -125,10 +125,20 @@ export function Composer({ ticketId, canNote, onSent, onTyping, placeholder }: C
   const [mode, setMode] = useState<'reply' | 'note'>('reply')
   const [sending, setSending] = useState(false)
   const [dragging, setDragging] = useState(false)
+  const [cannedResponses, setCannedResponses] = useState<CannedResponse[]>([])
+  const [showCanned, setShowCanned] = useState(false)
   const { files, add, remove, clear, uploading, ids } = usePendingFiles()
   const inputRef = useRef<HTMLInputElement>(null)
   const textRef = useRef<HTMLTextAreaElement>(null)
   const typingRef = useRef<{ active: boolean; last: number; timer?: number }>({ active: false, last: 0 })
+
+  useEffect(() => {
+    if (canNote) {
+      api<CannedResponse[]>('/canned-responses')
+        .then(setCannedResponses)
+        .catch(() => {})
+    }
+  }, [canNote])
 
   const stopTyping = useCallback(() => {
     const t = typingRef.current
@@ -206,6 +216,12 @@ export function Composer({ ticketId, canNote, onSent, onTyping, placeholder }: C
 
   const note = mode === 'note'
 
+  const insertCanned = (content: string) => {
+    setBody((prev) => (prev ? `${prev}\n${content}` : content))
+    setShowCanned(false)
+    textRef.current?.focus()
+  }
+
   return (
     <div
       className="relative"
@@ -274,6 +290,49 @@ export function Composer({ ticketId, canNote, onSent, onTyping, placeholder }: C
             <ImagePlus className="size-4" />
             <span className="hidden sm:inline">Attach</span>
           </button>
+          {canNote && cannedResponses.length > 0 && (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowCanned((s) => !s)}
+                className={clsx(
+                  'inline-flex h-8 items-center gap-1.5 rounded-lg px-2 text-[13px] transition-colors',
+                  note ? 'text-canary-ink/80 hover:bg-canary-edge/30' : 'text-ink-2 hover:bg-sunken hover:text-ink',
+                )}
+                aria-label="Insert quick response"
+                title="Saved quick replies"
+              >
+                <Bookmark className="size-4" />
+                <span className="hidden sm:inline">Templates</span>
+              </button>
+              {showCanned && (
+                <div className="absolute bottom-full left-0 mb-2 w-72 max-h-60 overflow-y-auto rounded-xl border border-rule bg-surface p-1.5 shadow-lg z-20">
+                  <div className="px-2 py-1 text-[11px] font-semibold uppercase tracking-wider text-ink-3">
+                    Quick replies
+                  </div>
+                  <ul className="space-y-0.5">
+                    {cannedResponses.map((item) => (
+                      <li key={item.id}>
+                        <button
+                          type="button"
+                          onClick={() => insertCanned(item.content)}
+                          className="w-full text-left rounded-lg px-2 py-1.5 hover:bg-sunken text-[13px] transition-colors"
+                        >
+                          <div className="font-medium text-ink flex items-center justify-between">
+                            <span>{item.title}</span>
+                            {item.shortcut && (
+                              <span className="text-[11px] font-mono text-ink-3">/{item.shortcut}</span>
+                            )}
+                          </div>
+                          <p className="line-clamp-1 text-[12px] text-ink-2 mt-0.5">{item.content}</p>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
           <span className={clsx('hidden text-[12px] md:inline', note ? 'text-canary-ink/60' : 'text-ink-3')}>
             Paste a screenshot or drop files here
           </span>

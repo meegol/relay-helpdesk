@@ -40,9 +40,11 @@ public class TicketService {
     private final ChatService chat;
     private final TicketAccess access;
     private final RealtimePublisher publisher;
+    private final tools.jackson.databind.ObjectMapper objectMapper;
 
     public TicketService(TicketRepository tickets, UserRepository users, AttachmentRepository attachmentRepository,
-            AttachmentService attachments, ChatService chat, TicketAccess access, RealtimePublisher publisher) {
+            AttachmentService attachments, ChatService chat, TicketAccess access, RealtimePublisher publisher,
+            tools.jackson.databind.ObjectMapper objectMapper) {
         this.tickets = tickets;
         this.users = users;
         this.attachmentRepository = attachmentRepository;
@@ -50,6 +52,7 @@ public class TicketService {
         this.chat = chat;
         this.access = access;
         this.publisher = publisher;
+        this.objectMapper = objectMapper;
     }
 
     @Transactional(readOnly = true)
@@ -96,6 +99,47 @@ public class TicketService {
         };
         return tickets.findAll(spec, Sort.by(Sort.Direction.DESC, "lastActivityAt")).stream()
                 .limit(500).map(TicketDto::summary).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public byte[] exportTickets(UserPrincipal user, ListQuery query, String format) {
+        if (!user.isAgent()) {
+            throw ApiException.forbidden("Only staff and admins can export tickets");
+        }
+        List<TicketDto> list = list(user, query);
+        if ("csv".equalsIgnoreCase(format)) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("ID,Subject,Status,Priority,Category,Client,Assignee,Created At,Last Activity\n");
+            for (TicketDto t : list) {
+                sb.append(escapeCsv(t.code())).append(",")
+                        .append(escapeCsv(t.subject())).append(",")
+                        .append(escapeCsv(t.status().name())).append(",")
+                        .append(escapeCsv(t.priority().name())).append(",")
+                        .append(escapeCsv(t.category().name())).append(",")
+                        .append(escapeCsv(t.client() != null ? t.client().fullName() : "")).append(",")
+                        .append(escapeCsv(t.assignee() != null ? t.assignee().fullName() : "")).append(",")
+                        .append(escapeCsv(t.createdAt() != null ? t.createdAt().toString() : "")).append(",")
+                        .append(escapeCsv(t.lastActivityAt() != null ? t.lastActivityAt().toString() : ""))
+                        .append("\n");
+            }
+            return sb.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        } else {
+            try {
+                return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(list);
+            } catch (Exception e) {
+                throw ApiException.badRequest("Failed to export JSON: " + e.getMessage());
+            }
+        }
+    }
+
+    private static String escapeCsv(String field) {
+        if (field == null) {
+            return "";
+        }
+        if (field.contains(",") || field.contains("\"") || field.contains("\n") || field.contains("\r")) {
+            return "\"" + field.replace("\"", "\"\"") + "\"";
+        }
+        return field;
     }
 
     @Transactional
